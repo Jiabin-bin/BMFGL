@@ -26,7 +26,8 @@
 
 ## 项目简介
 
-[vue3-element-admin-js](https://gitee.com/youlaiorg/vue3-element-admin-js) 基于 Vue3、Vite、JavaScript 和 Element-Plus 搭建的极简开箱即用企业级后台管理前端模板。 （配套 Java 后端 [youlai-boot](https://gitee.com/youlaiorg/youlai-boot) 和 Node 后端 [youlai-nest](https://gitee.com/youlaiorg/youlai-nest)）。
+[vue3-element-admin-js](https://gitee.com/youlaiorg/vue3-element-admin-js) 基于 Vue3、Vite、JavaScript 和 Element-Plus 搭建的极简开箱即用企业级后台管理前端模板。
+<!-- ##（配套 Java 后端 [youlai-boot](https://gitee.com/youlaiorg/youlai-boot) 和 Node 后端 [youlai-nest](https://gitee.com/youlaiorg/youlai-nest)）。 -->
 
 ## 项目特色
 
@@ -120,7 +121,7 @@
 
 ```bash
 # 克隆代码
-git clone https://gitee.com/youlaiorg/vue3-element-admin.git
+git clone https://github.com/Jiabin-bin/BMFGL.git
 
 # 切换目录
 cd vue3-element-admin
@@ -186,33 +187,3 @@ server {
 
 ![](https://foruda.gitee.com/images/1687755823165218215/c1705416_716974.png)
 
-## 项目统计
-
-![](https://repobeats.axiom.co/api/embed/aa7cca3d6fa9c308fc659fa6e09af9a1910506c3.svg "Repobeats analytics image")
-
-Thanks to all the contributors!
-
-[![contributors](https://contrib.rocks/image?repo=youlaitech/vue3-element-admin)](https://github.com/youlaitech/vue3-element-admin/graphs/contributors)
-
----
-
-<table align="center">
-  <tr>
-    <td align="center">
-      <img src="./src/assets/images/qr/wechat-offical.png" height="180" alt="公众号「有来技术」"><br>
-      <sub>公众号「有来技术」</sub>
-    </td>
-    <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
-    <td align="center">
-      <img src="./src/assets/images/qr/wechat-mp.jpg" height="180" alt="小程序「有来技术」"><br>
-      <sub>小程序「有来技术」</sub>
-    </td>
-    <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
-    <td align="center">
-      <img src="./src/assets/images/qr/wechat-personal.png" height="180" alt="添加作者微信"><br>
-      <sub>添加作者微信</sub>
-    </td>
-  </tr>
-</table>
-
-<p align="center"><em>技术交流 · 问题反馈 · 商务合作</em></p>
