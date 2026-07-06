@@ -10,7 +10,7 @@
         <div class="login-brand__header">
           <el-image :src="logo" class="login-brand__logo" />
           <div class="login-brand__identity">
-            <span class="login-brand__name">{{ appConfig.title }}</span>
+            <span class="login-brand__name">百鸣凡系统管理</span>
             <span class="login-brand__version">v{{ appConfig.version }}</span>
           </div>
         </div>
@@ -85,28 +85,6 @@
                   </el-form-item>
                 </el-tooltip>
 
-                <el-form-item prop="captchaCode">
-                  <div class="captcha-row">
-                    <el-input
-                      v-model.trim="loginFormData.captchaCode"
-                      placeholder="验证码"
-                      class="captcha-row__input"
-                      @keyup.enter="handleLoginSubmit"
-                    >
-                      <template #prefix>
-                        <span class="input-prefix-icon i-svg:security" />
-                      </template>
-                    </el-input>
-                    <div class="captcha-img" @click="getCaptcha">
-                      <el-icon v-if="codeLoading" class="is-loading" :size="16">
-                        <Loading />
-                      </el-icon>
-                      <img v-else-if="captchaBase64" :src="captchaBase64" alt="验证码" />
-                      <el-icon v-else :size="16"><Refresh /></el-icon>
-                    </div>
-                  </div>
-                </el-form-item>
-
                 <div class="login-options">
                   <el-checkbox v-model="loginFormData.rememberMe">记住我</el-checkbox>
                   <a class="login-options__link" @click="showForm('resetPwd')">忘记密码？</a>
@@ -156,8 +134,7 @@
 <script setup>
 defineOptions({ name: "LoginPage", inheritAttrs: false });
 
-import { Clock, Lock, Loading, Refresh, User } from "@element-plus/icons-vue";
-import AuthAPI from "@/api/auth";
+import { Clock, Lock, User } from "@element-plus/icons-vue";
 import router from "@/router";
 import { useUserStore } from "@/stores";
 import { AuthStorage } from "@/utils/auth";
@@ -173,8 +150,6 @@ const component = ref("login");
 const loginFormRef = ref();
 const loading = ref(false);
 const isCapsLock = ref(false);
-const captchaBase64 = ref();
-const codeLoading = ref(false);
 
 const UserIcon = markRaw(User);
 const LockIcon = markRaw(Lock);
@@ -182,8 +157,6 @@ const LockIcon = markRaw(Lock);
 const loginFormData = ref({
   username: "admin",
   password: "123456",
-  captchaId: "",
-  captchaCode: "",
   rememberMe: AuthStorage.getRememberMe(),
 });
 
@@ -193,18 +166,7 @@ const loginRules = computed(() => ({
     { required: true, trigger: "blur", message: "请输入密码" },
     { min: 6, message: "密码不能少于6位", trigger: "blur" },
   ],
-  captchaCode: [{ required: true, trigger: "blur", message: "请输入验证码" }],
 }));
-
-function getCaptcha() {
-  codeLoading.value = true;
-  AuthAPI.getCaptcha()
-    .then((d) => {
-      loginFormData.value.captchaId = d.captchaId;
-      captchaBase64.value = d.captchaBase64;
-    })
-    .finally(() => (codeLoading.value = false));
-}
 
 async function handleLoginSubmit() {
   const valid = await loginFormRef.value?.validate().then(
@@ -215,13 +177,10 @@ async function handleLoginSubmit() {
 
   loading.value = true;
   try {
-    await userStore.login(loginFormData.value).then(
-      async () => {
-        const redirectPath = route.query.redirect || "/";
-        await router.push(decodeURIComponent(redirectPath));
-      },
-      () => getCaptcha()
-    );
+    await userStore.login(loginFormData.value).then(async () => {
+      const redirectPath = route.query.redirect || "/";
+      await router.push(decodeURIComponent(redirectPath));
+    });
   } finally {
     loading.value = false;
   }
@@ -236,8 +195,6 @@ function checkCapsLock(event) {
 function showForm(type) {
   component.value = type;
 }
-
-onMounted(() => getCaptcha());
 </script>
 
 <style lang="scss" scoped>
@@ -493,11 +450,11 @@ $input-h: 44px;
   }
 }
 
-::deep(.el-form-item) {
+:deep(.el-form-item) {
   margin-bottom: 14px;
 }
 
-::deep(.el-input__wrapper) {
+:deep(.el-input__wrapper) {
   height: $input-h;
 }
 
@@ -506,44 +463,6 @@ $input-h: 44px;
   width: 14px;
   height: 14px;
   color: var(--el-text-color-placeholder);
-}
-
-.captcha-row {
-  display: flex;
-  gap: 12px;
-  width: 100%;
-}
-
-.captcha-row__input {
-  flex: 1;
-  min-width: 0;
-}
-
-.captcha-img {
-  box-sizing: border-box;
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 108px;
-  height: $input-h;
-  overflow: hidden;
-  cursor: pointer;
-  background: var(--el-fill-color-blank);
-  border: 1px solid var(--el-border-color);
-  border-radius: var(--el-border-radius-base);
-  transition: border-color 0.2s;
-
-  &:hover {
-    border-color: var(--el-color-primary);
-  }
-
-  img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
 }
 
 .login-options {

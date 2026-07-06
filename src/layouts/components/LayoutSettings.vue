@@ -196,7 +196,9 @@
                   `settings-tabs-style__preview--${item.value}`,
                 ]"
               >
-                <i /><i /><i />
+                <i />
+                <i />
+                <i />
               </span>
               <span class="settings-tabs-style__label">{{ item.label }}</span>
             </button>
@@ -1041,7 +1043,7 @@ function handleCloseDrawer() {
   }
 }
 
-::deep(.copy-config-dialog) {
+:deep(.copy-config-dialog) {
   .el-message-box__content {
     max-height: 400px;
     overflow-y: auto;

@@ -1,5 +1,5 @@
 {
-  "name": "vue3-element-admin-js",
+  "name": "百鸣凡系统管理",
   "description": "Vue3 + Vite + JavaScript + Element-Plus 的后台管理模板，vue3-element-admin 的 JavaScript 版本",
   "version": "4.7.2",
   "private": true,
@@ -100,6 +100,7 @@
     "stylelint-config-recommended-vue": "^1.6.1",
     "stylelint-prettier": "^5.0.3",
     "terser": "^5.48.0",
+    "typescript-eslint": "^8.62.1",
     "unocss": "^66.7.2",
     "unplugin-auto-import": "^21.0.0",
     "unplugin-vue-components": "^32.1.0",

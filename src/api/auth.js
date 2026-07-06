@@ -8,8 +8,6 @@ const AuthAPI = {
     const payload = {
       username: data.username,
       password: data.password,
-      captchaId: data.captchaId,
-      captchaCode: data.captchaCode,
     };
 
     // tenantId is optional — include only when provided (multi-tenant feature)
