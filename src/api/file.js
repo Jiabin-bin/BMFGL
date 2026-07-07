@@ -51,7 +51,24 @@ const FileAPI = {
    * @param url
    * @param fileName
    */
-  download(url, fileName) {
+  async download(url, fileName) {
+    const isStaticFileUrl = /^https?:\/\//i.test(url) || url.startsWith("/uploads/");
+
+    if (isStaticFileUrl) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("File download failed");
+      }
+      const blob = await response.blob();
+      const a = document.createElement("a");
+      const objectUrl = window.URL.createObjectURL(blob);
+      a.href = objectUrl;
+      a.download = fileName || "download";
+      a.click();
+      window.URL.revokeObjectURL(objectUrl);
+      return;
+    }
+
     return request({
       url,
       method: "get",
@@ -59,11 +76,11 @@ const FileAPI = {
     }).then((res) => {
       const blob = new Blob([res.data]);
       const a = document.createElement("a");
-      const url = window.URL.createObjectURL(blob);
-      a.href = url;
-      a.download = fileName || "下载文件";
+      const objectUrl = window.URL.createObjectURL(blob);
+      a.href = objectUrl;
+      a.download = fileName || "download";
       a.click();
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(objectUrl);
     });
   },
 };
