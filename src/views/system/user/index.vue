@@ -165,6 +165,7 @@
     </el-row>
 
     <!-- 用户表单 -->
+    <!-- 用户表单 -->
     <el-drawer
       v-model="dialogState.visible"
       :title="dialogState.title"
@@ -176,13 +177,14 @@
         <el-form-item label="用户名" prop="username">
           <el-input
             v-model="formData.username"
-            :readonly="!!formData.id"
+            :readonly="dialogState.mode === DialogMode.EDIT"
             placeholder="请输入用户名"
+            clearable
           />
         </el-form-item>
 
         <el-form-item label="用户昵称" prop="nickname">
-          <el-input v-model="formData.nickname" placeholder="请输入用户昵称" />
+          <el-input v-model="formData.nickname" placeholder="请输入用户昵称" clearable />
         </el-form-item>
 
         <el-form-item label="所属部门" prop="deptId">
@@ -212,11 +214,16 @@
         </el-form-item>
 
         <el-form-item label="手机号码" prop="mobile">
-          <el-input v-model="formData.mobile" placeholder="请输入手机号码" maxlength="11" />
+          <el-input
+            v-model="formData.mobile"
+            placeholder="请输入手机号码"
+            maxlength="11"
+            clearable
+          />
         </el-form-item>
 
         <el-form-item label="邮箱" prop="email">
-          <el-input v-model="formData.email" placeholder="请输入邮箱" maxlength="50" />
+          <el-input v-model="formData.email" placeholder="请输入邮箱" maxlength="50" clearable />
         </el-form-item>
 
         <el-form-item label="状态" prop="status">
@@ -233,8 +240,8 @@
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="handleSubmit">确 定</el-button>
-          <el-button @click="handleCloseDialog">取 消</el-button>
+          <el-button type="primary" @click="handleSubmit">确定</el-button>
+          <el-button @click="handleCloseDialog">取消</el-button>
         </div>
       </template>
     </el-drawer>
@@ -312,6 +319,14 @@ const dialogState = reactive({
 
 // 初始表单数据
 const initialFormData = {
+  id: undefined,
+  username: "",
+  nickname: "",
+  deptId: undefined,
+  gender: undefined,
+  roleIds: [],
+  mobile: "",
+  email: "",
   status: CommonStatus.ENABLED,
 };
 
@@ -414,9 +429,10 @@ function handleResetPassword(row) {
  * @param id 用户ID（编辑时传入）
  */
 async function handleOpenDialog(id) {
+  resetFormData();
+  userFormRef.value?.clearValidate();
   dialogState.visible = true;
 
-  // 并行加载下拉选项数据
   try {
     [roleOptions.value, deptOptions.value] = await Promise.all([
       RoleAPI.getOptions(),
@@ -427,9 +443,8 @@ async function handleOpenDialog(id) {
     console.error("加载选项数据失败:", error);
   }
 
-  // 编辑：加载用户数据
   if (id) {
-    dialogState.title = "修改用户";
+    dialogState.title = "????";
     dialogState.mode = DialogMode.EDIT;
     try {
       const data = await UserAPI.getFormData(id);
@@ -448,15 +463,18 @@ async function handleOpenDialog(id) {
 /**
  * 关闭用户表单弹窗
  */
+function resetFormData() {
+  Object.keys(formData).forEach((key) => {
+    delete formData[key];
+  });
+  Object.assign(formData, structuredClone(initialFormData));
+}
+
 function handleCloseDialog() {
   dialogState.visible = false;
-
-  // 安全地重置表单
   userFormRef.value?.resetFields();
   userFormRef.value?.clearValidate();
-
-  // 完全重置表单数据
-  Object.assign(formData, initialFormData);
+  resetFormData();
 }
 
 /**
