@@ -243,10 +243,11 @@ const UserAPI = {
    * 获取用户选项列表
    * @returns {Promise} 用户选项列表
    */
-  getOptions() {
+  getOptions(params) {
     return request({
       url: `${USER_BASE_URL}/options`,
       method: "get",
+      params,
     });
   },
 };

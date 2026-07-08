@@ -20,10 +20,11 @@ const RoleAPI = {
    * 获取角色下拉数据源
    * @returns {Promise} 角色选项列表
    */
-  getOptions() {
+  getOptions(params) {
     return request({
       url: `${ROLE_BASE_URL}/options`,
       method: "get",
+      params,
     });
   },
 
