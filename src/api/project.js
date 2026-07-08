@@ -34,6 +34,14 @@ const ProjectAPI = {
     });
   },
 
+  inspectCodeFile(data) {
+    return request({
+      url: `${PROJECT_BASE_URL}/code-files/inspect`,
+      method: "post",
+      data,
+    });
+  },
+
   deleteByIds(ids) {
     return request({
       url: `${PROJECT_BASE_URL}/${ids}`,

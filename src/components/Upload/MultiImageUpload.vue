@@ -208,9 +208,13 @@ const handlePreviewClose = () => {
   previewVisible.value = false;
 };
 
-onMounted(() => {
-  fileList.value = modelValue.value.map((url) => ({ url }));
-});
+watch(
+  modelValue,
+  (value) => {
+    fileList.value = value.map((url) => ({ url, status: "success" }));
+  },
+  { immediate: true }
+);
 </script>
 
 <style lang="scss" scoped></style>

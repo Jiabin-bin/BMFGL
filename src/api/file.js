@@ -55,17 +55,16 @@ const FileAPI = {
     const isStaticFileUrl = /^https?:\/\//i.test(url) || url.startsWith("/uploads/");
 
     if (isStaticFileUrl) {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("File download failed");
+      try {
+        const response = await fetch(url, { mode: "cors" });
+        if (!response.ok) {
+          throw new Error("File download failed");
+        }
+        const blob = await response.blob();
+        triggerDownload(window.URL.createObjectURL(blob), fileName || "download", true);
+      } catch {
+        window.open(url, "_blank", "noopener,noreferrer");
       }
-      const blob = await response.blob();
-      const a = document.createElement("a");
-      const objectUrl = window.URL.createObjectURL(blob);
-      a.href = objectUrl;
-      a.download = fileName || "download";
-      a.click();
-      window.URL.revokeObjectURL(objectUrl);
       return;
     }
 
@@ -75,14 +74,22 @@ const FileAPI = {
       responseType: "blob",
     }).then((res) => {
       const blob = new Blob([res.data]);
-      const a = document.createElement("a");
-      const objectUrl = window.URL.createObjectURL(blob);
-      a.href = objectUrl;
-      a.download = fileName || "download";
-      a.click();
-      window.URL.revokeObjectURL(objectUrl);
+      triggerDownload(window.URL.createObjectURL(blob), fileName || "download", true);
     });
   },
 };
+
+function triggerDownload(href, fileName, revokeObjectUrl = false) {
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = fileName;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  if (revokeObjectUrl) {
+    window.URL.revokeObjectURL(href);
+  }
+}
 
 export default FileAPI;
