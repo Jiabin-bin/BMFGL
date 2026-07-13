@@ -206,14 +206,38 @@
           <WangEditor v-model="formData.description" height="300px" />
         </el-form-item>
         <el-form-item label="文档">
-          <FileUpload
-            v-model="formData.documents"
-            accept=".pdf,.doc,.docx,.xls,.xlsx"
-            :limit="10"
-            :max-file-size="50"
-            upload-btn-text="上传文档"
-            :style="{ width: '100%' }"
-          />
+          <div class="document-register">
+            <div class="document-register__row">
+              <DictSelect
+                v-model="documentForm.stage"
+                code="project_stage"
+                placeholder="请选择文档阶段"
+              />
+              <el-button type="primary" @click="handleAddDocuments">添加到项目文档</el-button>
+            </div>
+            <FileUpload
+              v-model="documentForm.files"
+              accept=".pdf,.doc,.docx,.xls,.xlsx"
+              :limit="10"
+              :max-file-size="50"
+              upload-btn-text="上传文档"
+              :style="{ width: '100%' }"
+            />
+          </div>
+          <div v-if="formData.documents.length" class="document-stage-list">
+            <div
+              v-for="(file, index) in formData.documents"
+              :key="`${file.url}-${index}`"
+              class="document-stage-item"
+            >
+              <div class="document-stage-item__main">
+                <DictTag v-if="file.stage" v-model="file.stage" code="project_stage" />
+                <el-tag v-else type="info">未标记阶段</el-tag>
+                <span class="document-stage-item__name">{{ file.name }}</span>
+              </div>
+              <el-button type="danger" link @click="removeDocument(index)">删除</el-button>
+            </div>
+          </div>
         </el-form-item>
         <el-form-item label="项目图片">
           <MultiImageUpload v-model="formData.imageUrls" :limit="10" :max-file-size="10" />
@@ -263,15 +287,28 @@
       append-to-body
     >
       <el-empty v-if="!documentDrawer.files.length" description="暂无文档" />
-      <div v-else class="document-list">
-        <div v-for="file in documentDrawer.files" :key="file.url" class="document-item">
-          <div class="document-item__main">
-            <el-icon><Document /></el-icon>
-            <span class="document-item__name">{{ file.name }}</span>
+      <div v-else class="document-stage-group-list">
+        <div
+          v-for="group in groupedDocuments(documentDrawer.files)"
+          :key="group.stage || 'unknown'"
+          class="document-stage-group"
+        >
+          <div class="document-stage-group__title">
+            <DictTag v-if="group.stage" v-model="group.stage" code="project_stage" />
+            <el-tag v-else type="info">未标记阶段</el-tag>
+            <span>{{ group.files.length }} 个文档</span>
           </div>
-          <div class="document-item__actions">
-            <el-button type="primary" link @click="previewFile(file)">预览</el-button>
-            <el-button type="primary" link @click="downloadFile(file)">下载</el-button>
+          <div class="document-list">
+            <div v-for="file in group.files" :key="file.url" class="document-item">
+              <div class="document-item__main">
+                <el-icon><Document /></el-icon>
+                <span class="document-item__name">{{ file.name }}</span>
+              </div>
+              <div class="document-item__actions">
+                <el-button type="primary" link @click="previewFile(file)">预览</el-button>
+                <el-button type="primary" link @click="downloadFile(file)">下载</el-button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -362,6 +399,11 @@ const codeFileForm = reactive({
   remark: "",
 });
 
+const documentForm = reactive({
+  stage: "",
+  files: [],
+});
+
 const drawer = reactive({
   visible: false,
   title: "新增项目",
@@ -398,6 +440,8 @@ function resetForm() {
   Object.assign(formData, structuredClone(initialFormData));
   codeFileForm.localPath = "";
   codeFileForm.remark = "";
+  documentForm.stage = "";
+  documentForm.files = [];
   projectFormRef.value?.clearValidate();
 }
 
@@ -508,6 +552,32 @@ function downloadFile(file) {
   FileAPI.download(file.url, file.name);
 }
 
+function handleAddDocuments() {
+  const files = normalizeFiles(documentForm.files);
+  if (!documentForm.stage) {
+    ElMessage.warning("请选择文档所属阶段");
+    return;
+  }
+  if (!files.length) {
+    ElMessage.warning("请先点击上传文档选择文件");
+    return;
+  }
+
+  const nextFiles = files.map((file) => ({
+    ...file,
+    stage: documentForm.stage,
+  }));
+  const existsUrls = new Set(formData.documents.map((file) => file.url));
+  formData.documents.push(...nextFiles.filter((file) => !existsUrls.has(file.url)));
+  documentForm.stage = "";
+  documentForm.files = [];
+  ElMessage.success("文档添加成功");
+}
+
+function removeDocument(index) {
+  formData.documents.splice(index, 1);
+}
+
 async function handleAddCodeFile() {
   if (!codeFileForm.localPath.trim()) {
     ElMessage.warning("请填写代码包本机路径");
@@ -544,8 +614,23 @@ function normalizeFiles(files) {
     .map((file) => ({
       name: file?.name || file?.url?.split("/").pop() || "未命名文档",
       url: file?.url || "",
+      stage: file?.stage || "",
     }))
     .filter((file) => file.url);
+}
+
+function groupedDocuments(files) {
+  const groups = [];
+  normalizeFiles(files).forEach((file) => {
+    const stage = file.stage || "";
+    let group = groups.find((item) => item.stage === stage);
+    if (!group) {
+      group = { stage, files: [] };
+      groups.push(group);
+    }
+    group.files.push(file);
+  });
+  return groups;
 }
 
 function normalizeCodeFiles(files) {
@@ -622,6 +707,65 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.document-register {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.document-register__row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto;
+  gap: 8px;
+  width: 100%;
+}
+
+.document-stage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.document-stage-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 6px;
+}
+
+.document-stage-item__main {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.document-stage-item__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.document-stage-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.document-stage-group__title {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+  color: var(--el-text-color-secondary);
 }
 
 .table-ellipsis {
