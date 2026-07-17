@@ -66,6 +66,27 @@
             <DictTag v-model="row.stage" code="project_stage" />
           </template>
         </el-table-column>
+        <el-table-column label="知识产权" width="120" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.ipType" type="info">{{ row.ipType }}</el-tag>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="申报状态" width="120" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.declarationStatus" :type="getDeclarationStatusTag(row)">
+              {{ row.declarationStatus }}
+            </el-tag>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="申报完成" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag :type="row.declarationCompleted ? 'success' : 'info'">
+              {{ row.declarationCompleted ? "已完成" : "未完成" }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="简介" width="110" align="center">
           <template #default="{ row }">
             <el-button
@@ -154,7 +175,7 @@
     <el-drawer
       v-model="drawer.visible"
       :title="drawer.title"
-      size="720px"
+      size="860px"
       append-to-body
       @closed="resetForm"
     >
@@ -204,6 +225,25 @@
         </el-form-item>
         <el-form-item label="简介" prop="description">
           <WangEditor v-model="formData.description" height="300px" />
+        </el-form-item>
+        <el-form-item label="申报信息">
+          <div class="declaration-entry">
+            <div class="declaration-entry__summary">
+              <el-tag v-if="formData.ipType" type="info">{{ formData.ipType }}</el-tag>
+              <el-tag v-if="formData.declarationStatus" :type="getDeclarationStatusTag(formData)">
+                {{ formData.declarationStatus }}
+              </el-tag>
+              <el-tag :type="formData.declarationCompleted ? 'success' : 'info'">
+                {{ formData.declarationCompleted ? "已完成" : "未完成" }}
+              </el-tag>
+              <span v-if="!hasDeclarationInfo(formData)" class="declaration-entry__empty">
+                暂未维护申报信息
+              </span>
+            </div>
+            <el-button type="primary" plain @click="declarationDrawer.visible = true">
+              维护申报信息
+            </el-button>
+          </div>
         </el-form-item>
         <el-form-item label="文档">
           <div class="document-register">
@@ -277,6 +317,115 @@
       <template #footer>
         <el-button @click="drawer.visible = false">取消</el-button>
         <el-button type="primary" :loading="submitLoading" @click="handleSubmit">确定</el-button>
+      </template>
+    </el-drawer>
+
+    <el-drawer v-model="declarationDrawer.visible" title="申报信息维护" size="720px" append-to-body>
+      <el-form :model="formData" label-width="130px">
+        <div class="form-section-title">申报主体与对接单位</div>
+        <el-form-item label="归属单位ID">
+          <el-input v-model="formData.declarationUnitId" placeholder="请输入申报归属单位ID" />
+        </el-form-item>
+        <el-form-item label="单位全称">
+          <el-input v-model="formData.declarationUnitName" placeholder="请输入完整工商名称" />
+        </el-form-item>
+        <el-form-item label="协作单位">
+          <el-input
+            v-model="formData.cooperationUnits"
+            type="textarea"
+            :rows="2"
+            placeholder="请输入联合申报高校、外协企业、研究院等"
+          />
+        </el-form-item>
+        <el-form-item label="对接经办人">
+          <el-input
+            v-model="formData.unitContactPerson"
+            placeholder="请输入对方单位联络人和联系电话"
+          />
+        </el-form-item>
+
+        <div class="form-section-title">知识产权申报状态</div>
+        <el-form-item label="知识产权类型">
+          <el-select
+            v-model="formData.ipType"
+            clearable
+            placeholder="请选择知识产权类型"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in ipTypeOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="申报状态">
+          <el-select
+            v-model="formData.declarationStatus"
+            clearable
+            placeholder="请选择申报状态"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in declarationStatusOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="完成标记">
+          <el-switch
+            v-model="formData.declarationCompleted"
+            active-text="已完成"
+            inactive-text="未完成"
+          />
+        </el-form-item>
+        <el-form-item label="受理号">
+          <el-input v-model="formData.acceptanceNo" placeholder="请输入申报受理号" />
+        </el-form-item>
+        <el-form-item label="证书/授权号">
+          <el-input v-model="formData.certificateNo" placeholder="请输入证书编号或授权号" />
+        </el-form-item>
+        <el-form-item label="提交日期">
+          <el-date-picker
+            v-model="formData.submitDate"
+            type="date"
+            value-format="YYYY-MM-DD"
+            placeholder="请选择申报提交日期"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="办结日期">
+          <el-date-picker
+            v-model="formData.completeDate"
+            type="date"
+            value-format="YYYY-MM-DD"
+            placeholder="请选择办结完成日期"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="内部承办人">
+          <el-input v-model="formData.internalHandler" placeholder="请输入公司申报专员" />
+        </el-form-item>
+        <el-form-item label="费用归属单位">
+          <el-input v-model="formData.feeUnit" placeholder="请输入申报费用归属单位" />
+        </el-form-item>
+
+        <div class="form-section-title">补充备注</div>
+        <el-form-item label="申报备注">
+          <el-input
+            v-model="formData.declarationRemark"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入联合申报比例、权属约定、政府补贴对应项目、加急申报等"
+          />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button type="primary" @click="declarationDrawer.visible = false">完成</el-button>
       </template>
     </el-drawer>
 
@@ -387,6 +536,20 @@ const initialFormData = {
   developerIds: [],
   stage: "",
   description: "",
+  declarationUnitId: "",
+  declarationUnitName: "",
+  cooperationUnits: "",
+  unitContactPerson: "",
+  ipType: "",
+  declarationStatus: "",
+  declarationCompleted: false,
+  acceptanceNo: "",
+  certificateNo: "",
+  submitDate: "",
+  completeDate: "",
+  internalHandler: "",
+  feeUnit: "",
+  declarationRemark: "",
   documents: [],
   imageUrls: [],
   codeFiles: [],
@@ -399,6 +562,26 @@ const codeFileForm = reactive({
   remark: "",
 });
 
+const ipTypeOptions = [
+  { label: "发明专利", value: "发明专利" },
+  { label: "实用新型", value: "实用新型" },
+  { label: "外观专利", value: "外观专利" },
+  { label: "软著", value: "软著" },
+  { label: "商标", value: "商标" },
+  { label: "集成电路布图", value: "集成电路布图" },
+  { label: "植物新品种", value: "植物新品种" },
+];
+
+const declarationStatusOptions = [
+  { label: "未启动申报", value: "未启动申报" },
+  { label: "材料整理中", value: "材料整理中" },
+  { label: "提交受理", value: "提交受理" },
+  { label: "审查中", value: "审查中" },
+  { label: "授权 / 登记", value: "授权 / 登记" },
+  { label: "驳回", value: "驳回" },
+  { label: "失效", value: "失效" },
+];
+
 const documentForm = reactive({
   stage: "",
   files: [],
@@ -407,6 +590,10 @@ const documentForm = reactive({
 const drawer = reactive({
   visible: false,
   title: "新增项目",
+});
+
+const declarationDrawer = reactive({
+  visible: false,
 });
 
 const documentDrawer = reactive({
@@ -442,6 +629,7 @@ function resetForm() {
   codeFileForm.remark = "";
   documentForm.stage = "";
   documentForm.files = [];
+  declarationDrawer.visible = false;
   projectFormRef.value?.clearValidate();
 }
 
@@ -676,6 +864,26 @@ function formatCodeFileKind(file) {
   return file?.kind === "folder" || file?.type === "folder" ? "源码目录" : `代码文件(${file.type})`;
 }
 
+function hasDeclarationInfo(data) {
+  return Boolean(
+    data.ipType ||
+    data.declarationStatus ||
+    data.declarationCompleted ||
+    data.declarationUnitId ||
+    data.declarationUnitName ||
+    data.acceptanceNo ||
+    data.certificateNo
+  );
+}
+
+function getDeclarationStatusTag(data) {
+  if (data.declarationCompleted || data.declarationStatus === "授权 / 登记") return "success";
+  if (data.declarationStatus === "驳回" || data.declarationStatus === "失效") return "danger";
+  if (data.declarationStatus === "提交受理" || data.declarationStatus === "审查中")
+    return "warning";
+  return "info";
+}
+
 function formatDescription(description) {
   if (!description) return "-";
   const text = String(description)
@@ -707,6 +915,35 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.form-section-title {
+  padding-left: 10px;
+  margin: 18px 0 12px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--el-text-color-primary);
+  border-left: 3px solid var(--el-color-primary);
+}
+
+.declaration-entry {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.declaration-entry__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+
+.declaration-entry__empty {
+  color: var(--el-text-color-secondary);
 }
 
 .document-register {
